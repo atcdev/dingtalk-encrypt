@@ -20,8 +20,8 @@ class DingTalkEncryptor {
     this.aesKey = (new Buffer.from(encodingAesKey + '=', 'base64')).toString('binary');
     this.corpId = corpIdOrSuiteKey;
 
-    this.keySpec = CryptoJS.enc.Utf8.parse(this.aesKey);
-    this.iv = CryptoJS.enc.Utf8.parse(this.aesKey.substr(0, 16));
+    this.keySpec = CryptoJS.enc.Latin1.parse(this.aesKey);
+    this.iv = CryptoJS.enc.Latin1.parse(this.aesKey.substr(0, 16));
     this.options = {
       iv: this.iv,
       mode: CryptoJS.mode.CBC,
@@ -47,7 +47,7 @@ class DingTalkEncryptor {
       unencrypted += PKCS7Padding.getPaddingBytes(unencrypted.length);
 
       // encrypt
-      unencrypted = CryptoJS.enc.Utf8.parse(unencrypted)
+      unencrypted = CryptoJS.enc.Latin1.parse(unencrypted)
       const encrypted = CryptoJS.AES.encrypt(unencrypted, this.keySpec, this.options);
       return encrypted.toString();
       // return CryptoJS.enc.Base64.stringify(encrypted.ciphertext);
