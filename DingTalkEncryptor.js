@@ -58,14 +58,14 @@ class DingTalkEncryptor {
 
   decrypt(encrypted) {
     let originalLatin1Str;
-    let originalUtf8Str;
+    //let originalUtf8Str;
     let networkOrder;
 
     try {
       // decrypt
       const decrypted = CryptoJS.AES.decrypt(encrypted, this.keySpec, this.options);
       originalLatin1Str = CryptoJS.enc.Latin1.stringify(decrypted);
-      originalUtf8Str = CryptoJS.enc.Utf8.stringify(decrypted);
+      //originalUtf8Str = CryptoJS.enc.Utf8.stringify(decrypted);
     } catch (e) {
       console.log(e);
       throw new DingTalkEncryptException(900008);
@@ -73,15 +73,20 @@ class DingTalkEncryptor {
 
     let plainText;
     let fromCorpid;
-    let noPadRetUtf8;
+    //let noPadRetUtf8;
     let noPadRetLatin1;
     try {
       noPadRetLatin1 = PKCS7Padding.removePaddingBytes(originalLatin1Str);
-      noPadRetUtf8 = PKCS7Padding.removePaddingBytes(originalUtf8Str);
-      networkOrder = noPadRetUtf8.substring(16, 20);
+      networkOrder = noPadRetLatin1.substring(16, 20);
+      //noPadRetUtf8 = PKCS7Padding.removePaddingBytes(originalUtf8Str);
+      //networkOrder = noPadRetUtf8.substring(16, 20);
+      
       // reverse: Utils.bin2String(Utils.int2Bytes(plainText.length));
       const plainTextLength = Utils.bytes2int(Utils.string2Bin(networkOrder));
-      plainText = noPadRetUtf8.substring(20, 20 + plainTextLength);
+
+      //plainText = noPadRetUtf8.substring(20, 20 + plainTextLength);
+      plainText = noPadRetLatin1.substring(20, 20 + plainTextLength);
+      
       fromCorpid = noPadRetLatin1.substring(20 + plainTextLength, noPadRetLatin1.length);
       // console.log(`debug noPadRet: ${noPadRet.length}: ${noPadRet}`);
       // console.log(`debug networkOrder: ${networkOrder.length}: [${networkOrder}]`);
