@@ -2,6 +2,7 @@
 'use strict';
 
 const CryptoJS = require('crypto-js');
+const iconv = require('iconv-lite');
 // const AES = require('crypto-js/aes');
 const PKCS7Padding = require('./PKCS7Padding');
 const Utils = require('./Utils');
@@ -58,14 +59,12 @@ class DingTalkEncryptor {
 
   decrypt(encrypted) {
     let originalLatin1Str;
-    //let originalUtf8Str;
     let networkOrder;
 
     try {
       // decrypt
       const decrypted = CryptoJS.AES.decrypt(encrypted, this.keySpec, this.options);
       originalLatin1Str = CryptoJS.enc.Latin1.stringify(decrypted);
-      //originalUtf8Str = CryptoJS.enc.Utf8.stringify(decrypted);
     } catch (e) {
       console.log(e);
       throw new DingTalkEncryptException(900008);
@@ -73,20 +72,21 @@ class DingTalkEncryptor {
 
     let plainText;
     let fromCorpid;
-    //let noPadRetUtf8;
+    let titleUtf8;
     let noPadRetLatin1;
     try {
       noPadRetLatin1 = PKCS7Padding.removePaddingBytes(originalLatin1Str);
       networkOrder = noPadRetLatin1.substring(16, 20);
-      //noPadRetUtf8 = PKCS7Padding.removePaddingBytes(originalUtf8Str);
-      //networkOrder = noPadRetUtf8.substring(16, 20);
-      
       // reverse: Utils.bin2String(Utils.int2Bytes(plainText.length));
       const plainTextLength = Utils.bytes2int(Utils.string2Bin(networkOrder));
-
-      //plainText = noPadRetUtf8.substring(20, 20 + plainTextLength);
       plainText = noPadRetLatin1.substring(20, 20 + plainTextLength);
-      
+
+      //Fix text encode
+      const plainObj = JSON.parse(plainText);
+      const encodedTitleBuff = iconv.encode(plainObj.title, 'binary');
+      plainObj.title = iconv.decode(encodedTitleBuff, 'utf8');
+      plainText = JSON.stringify(plainObj);
+
       fromCorpid = noPadRetLatin1.substring(20 + plainTextLength, noPadRetLatin1.length);
       // console.log(`debug noPadRet: ${noPadRet.length}: ${noPadRet}`);
       // console.log(`debug networkOrder: ${networkOrder.length}: [${networkOrder}]`);
